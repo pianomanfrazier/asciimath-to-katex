@@ -8,20 +8,28 @@
         <meta name="viewport" content="width=device-width, initial-scale = 1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.css" integrity="sha384-b/NoaeRXkMxyKcrDw2KtVtYKkVg3dA0rTRgLoV7W2df3MzeR1eHLTi+l4//4fMwk" crossorigin="anonymous">
         <link rel="stylesheet" href="https://unpkg.com/picnic">
+        <script src="lib/prism.js"></script>
+        <link rel="stylesheet" href="lib/prism.css">
         <style>
             body {
-                max-width: 30em;
+                max-width: 40em;
                 margin: auto;
             }
             .mt-3 {
                 margin-top: 3em;
             }
+            .btn {
+                display: block;
+            }
         </style>
     </head>
     <body>
         <h1>Render asciiMath to Latex</h1>
+
         <input type="text" id="asciiInput">
-        <button onclick="processInput()">Render Input</button>
+        <div id="error" class="label error"></div>
+        <button class="btn" onclick="processInput()">Render Input</button>
+
         <p>Latex output: <span id="latexOutput"></span></p>
         <p>Katex output: <span id="katexRendered"></span></p>
         <p class="mt-3">See <a href="http://asciimath.org/#syntax">AsciiMath</a> for input syntax.</p>
@@ -31,12 +39,28 @@
             var inputEl = document.getElementById('asciiInput');
             var latexEl = document.getElementById('latexOutput');
             var renderedEl = document.getElementById('katexRendered');
+            var errorEl = document.getElementById('error');
             function processInput() {
-                var rendered = Window.renderAsciiMath(inputEl.value);
-                renderedEl.innerHTML = rendered;
-                latexEl.innerHTML = Window.ascii2latex(inputEl.value)
+                var rendered = '';
+                try {
+                    // show the latex output
+                    latexEl.innerHTML = '<pre><code class="language-latex">' + Window.ascii2latex(inputEl.value) + '</code></pre>';
+                    // renderAsciiMath first converts the string to latex
+                    // and then passes the latex to Katex
+                    rendered = Window.renderAsciiMath(inputEl.value, { displayMode: true });
+                    renderedEl.innerHTML = rendered;
+                    errorEl.innerHTML = '';
+                    errorEl.style.display = 'none';
+                    Prism.highlightAll();
+                } catch (err) {
+                    console.error(err);
+                    errorEl.innerHTML = err.message;
+                    latexEl.innerHTML = '';
+                    renderedEl.innerHTML = '';
+                    errorEl.style.display = 'inline-block';
+                }
             }
-            // process initial example input
+            // set initial example input
             inputEl.value = "int_0^1 f(x)dx"
             processInput();
         </script>
